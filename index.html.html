@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hormone Robot Race</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff4dc;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+body{font-family:'Nunito','Segoe UI',system-ui,sans-serif;color:#1f2a44}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center;overflow:hidden;
+ background:
+  radial-gradient(800px 420px at 0% 0%,rgba(255,200,140,.55),transparent 65%),
+  radial-gradient(800px 420px at 100% 0%,rgba(150,205,255,.5),transparent 65%),
+  radial-gradient(900px 500px at 50% 100%,rgba(190,240,200,.45),transparent 65%),
+  linear-gradient(rgba(120,90,40,.05) 1px,transparent 1px) 0 0/48px 48px,
+  linear-gradient(90deg,rgba(120,90,40,.05) 1px,transparent 1px) 0 0/48px 48px,
+  #fff4dc}
+.orb{font-family:'Orbitron','Nunito',sans-serif}
+
+#hdr{height:40px;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+#hdr h1{font-size:24px;letter-spacing:2px;background:linear-gradient(90deg,#2563eb,#7c3aed,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent}
+#hdr small{font:800 16px 'Nunito',sans-serif;color:#8a7650;margin-left:14px;letter-spacing:0}
+.hb{display:flex;gap:10px}
+.hb button{height:34px;min-width:46px;padding:0 14px;border-radius:12px;border:2px solid #e2cd9c;background:#fff;color:#5b4a26;font:800 16px 'Nunito',sans-serif;cursor:pointer}
+.hb button:active{transform:scale(.95)}
+
+/* lintasan (atas) */
+#lanes{padding:4px 24px 0;display:flex;flex-direction:column;gap:6px}
+.lane{height:96px;display:flex;gap:10px;align-items:stretch}
+.tag{width:204px;gap:6px;border-radius:18px;background:var(--c);color:var(--t);display:flex;align-items:center;justify-content:space-between;padding:0 14px;box-shadow:0 5px 12px color-mix(in srgb,var(--c) 40%,transparent)}
+.tag b{font-size:20px;white-space:nowrap;font-weight:900;line-height:1.1;letter-spacing:.5px}
+.tag .cnt{text-align:right;white-space:nowrap;font-weight:900;font-size:30px;line-height:1}
+.tag .cnt i{display:block;font-style:normal;font-size:14px;font-weight:800;opacity:.9;margin-top:4px}
+.track{position:relative;flex:1;display:flex;border-radius:18px;background:#fff;border:2.5px solid #e2cd9c;box-shadow:0 4px 10px rgba(120,90,40,.12)}
+.start{flex:0 0 96px;display:flex;align-items:center;justify-content:center;font:900 15px 'Orbitron',sans-serif;color:#7a6a48;letter-spacing:1px;
+ background:repeating-linear-gradient(135deg,#f3e6c4 0 10px,#fff 10px 20px);border-radius:15px 0 0 15px;border-right:3px dashed #c9b27a}
+.tile{flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-weight:900;font-size:17px;color:#b3a27a;border-right:1.5px solid #f0e4c4;transition:background .4s,color .4s}
+.tile.on{background:color-mix(in srgb,var(--c) 38%,#fff);color:#1f2a44}
+.tile.fin{border-radius:0 15px 15px 0;border-right:0;align-items:center;font:900 14px 'Orbitron',sans-serif;color:#fff;letter-spacing:1px;
+ background:conic-gradient(#fff 25%,#222 0 50%,#fff 0 75%,#222 0) 0 0/24px 24px;text-shadow:0 0 4px #000,0 0 6px #000,0 0 3px #000}
+.robot{position:absolute;bottom:6px;width:66px;height:76px;transform:translateX(-50%);transition:left .9s cubic-bezier(.45,.05,.3,1);z-index:5;pointer-events:none}
+.robot svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+.robot.go svg{animation:hop .9s ease}
+.robot.win svg{animation:cheer .6s ease infinite}
+@keyframes hop{0%{transform:translateY(0) rotate(0)}25%{transform:translateY(-18px) rotate(-8deg)}50%{transform:translateY(0) rotate(6deg)}75%{transform:translateY(-10px) rotate(-4deg)}100%{transform:none}}
+@keyframes cheer{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-14px) scale(1.12)}}
+.bub{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);padding:2px 14px;border-radius:14px;font-weight:900;font-size:22px;white-space:nowrap;color:#fff;animation:pop 1.2s ease forwards;z-index:9}
+.bub.ok{background:#16a34a;box-shadow:0 3px 10px rgba(22,163,74,.5)}
+.bub.no{background:#dc2626;box-shadow:0 3px 10px rgba(220,38,38,.5)}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,10px) scale(.4)}20%{opacity:1;transform:translate(-50%,-4px) scale(1.15)}80%{opacity:1;transform:translate(-50%,-10px) scale(1)}100%{opacity:0;transform:translate(-50%,-22px)}}
+
+/* kotak soal (bawah, berjajar 4) */
+#qrow{display:flex;gap:14px;padding:0 24px;margin-top:10px;height:610px}
+.qbox{flex:1;min-width:0;display:flex;flex-direction:column;border-radius:24px;border:4px solid var(--c);overflow:hidden;
+ background:color-mix(in srgb,var(--c) 14%,#fff);box-shadow:0 8px 20px color-mix(in srgb,var(--c) 32%,transparent);transition:box-shadow .25s,background .25s}
+.qbox.ok{box-shadow:0 0 0 5px #22c55e,0 0 26px #22c55e;background:#e3f8e9}
+.qbox.no{box-shadow:0 0 0 5px #ef4444,0 0 26px #ef4444;background:#fde8e8;animation:shake .45s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.qh{flex:0 0 54px;display:flex;align-items:center;justify-content:center;background:var(--c);color:var(--t);font-size:27px;font-weight:900;letter-spacing:2px}
+.qh.ok{background:#16a34a;color:#fff}.qh.no{background:#dc2626;color:#fff}
+.q{white-space:pre-line;padding:12px 16px 6px;font-weight:800;font-size:var(--fq);line-height:1.2;color:#1f2a44}
+.opts{flex:1;display:flex;flex-direction:column;gap:8px;padding:6px 12px 12px;min-height:0}
+.opt{flex:1 1 auto;display:flex;align-items:center;gap:10px;text-align:left;padding:4px 10px 4px 8px;border-radius:16px;border:3px solid var(--c);background:#fff;color:#1f2a44;
+ font:700 var(--fo)/1.17 'Nunito',sans-serif;cursor:pointer;min-height:0;transition:transform .1s,background .2s}
+.opt:active{transform:scale(.97)}
+.opt .l{flex:0 0 38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--c);color:var(--t);font-weight:900;font-size:21px}
+.opt.right{background:#22c55e;border-color:#15803d;color:#fff}
+.opt.wrong{background:#ef4444;border-color:#b91c1c;color:#fff}
+.qbox.lock .opt:not(.right):not(.wrong){opacity:.45}
+.qbox.lock .opt{pointer-events:none}
+
+/* overlay */
+.ov{position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;background:rgba(255,244,220,.96)}
+.ov.show{display:flex}
+.ov h2{font-size:104px;line-height:1.05;background:linear-gradient(90deg,#2563eb,#7c3aed,#db2777);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:4px}
+.ov p{font-size:32px;color:#7a6840;font-weight:800;margin-top:14px}
+.big{margin-top:34px;padding:22px 70px;font:900 40px 'Nunito',sans-serif;border:0;border-radius:60px;color:#fff;cursor:pointer;background:linear-gradient(90deg,#2563eb,#7c3aed);box-shadow:0 8px 24px rgba(99,70,230,.4)}
+.big:active{transform:scale(.96)}
+.big.alt{background:#fff;color:#5b4a26;box-shadow:none;border:3px solid #e2cd9c;font-size:30px;padding:18px 44px}
+.parade{display:flex;gap:40px;margin-top:34px}
+.parade .robot{position:relative;left:auto;bottom:auto;transform:none;width:120px;height:136px;animation:float 2.2s ease-in-out infinite}
+.parade .robot:nth-child(2){animation-delay:.3s}.parade .robot:nth-child(3){animation-delay:.6s}.parade .robot:nth-child(4){animation-delay:.9s}
+@keyframes float{50%{transform:translateY(-16px)}}
+.rules{margin-top:24px;font-size:26px;color:#5b4a26;font-weight:700;line-height:1.5}
+#wTitle{font-size:88px;font-weight:900;margin-top:6px}
+#wRank{margin-top:16px;font-size:30px;font-weight:700;color:#3b3220;line-height:1.6}
+#wRobot .robot{position:relative;left:auto;bottom:auto;transform:none;width:190px;height:215px;margin:0 auto}
+.cf{position:absolute;top:-30px;width:14px;height:22px;border-radius:3px;animation:fall linear forwards;z-index:51}
+@keyframes fall{to{transform:translateY(1150px) rotate(720deg)}}
+.qh{position:relative}
+.hr{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:26px;letter-spacing:2px;line-height:1}
+.hr i{font-style:normal;color:var(--t)}.hr i.x{opacity:.22}
+.qh.ok .hr i,.qh.no .hr i{color:#fff}
+.tile.blk,.tile.fin.blk{background:repeating-linear-gradient(45deg,#fde2e2 0 8px,#fff 8px 16px);color:#dc2626;font:900 24px 'Nunito',sans-serif;align-items:center;text-shadow:none;letter-spacing:0}
+.qbox.done{background:#ececec;border-color:#9ca3af;box-shadow:none}
+.qbox.done .qh{background:#9ca3af;color:#fff}
+.qbox.done .q{text-align:center;padding:60px 24px;color:#4b5563}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="hdr">
+    <h1 class="orb">HORMONE ROBOT RACE<small>Sistem Hormon • Kelas IX</small></h1>
+    <div class="hb"><button id="bSnd">🔊</button><button id="bFs">⛶ Layar Penuh</button><button id="bReset">↻ Ulang</button></div>
+  </div>
+  <div id="lanes"></div>
+  <div id="qrow"></div>
+
+  <div class="ov show" id="ovStart">
+    <h2 class="orb">HORMONE<br>ROBOT RACE</h2>
+    <p>Sistem Hormon • Kelas IX</p>
+    <div class="parade" id="parade"></div>
+    <div class="rules">Jawab benar → robot maju 1 langkah.<br>Salah 1–2× → robot diam &amp; soal bisa muncul lagi. Salah 3× → soal HANGUS dan robot tak bisa sampai FINISH!<br>Robot yang lebih dulu sampai FINISH jadi juara!</div>
+    <button class="big" id="bGo">▶ MULAI BALAPAN</button>
+  </div>
+
+  <div class="ov" id="ovWin">
+    <div id="wTop" style="font-size:40px;font-weight:900;letter-spacing:6px;color:#b45309">🏆 PEMENANG 🏆</div>
+    <div id="wRobot"></div>
+    <div id="wTitle"></div>
+    <div id="wRank"></div>
+    <div style="display:flex;gap:24px"><button class="big" id="bAgain">↻ Main Lagi</button><button class="big alt" id="bMenu">Menu Awal</button></div>
+  </div>
+</div>
+
+<script>
+const TOTAL = 10;
+const TEAMS = [
+  {k:'b', n:'BIRU',   c:'#3b82f6', d:'#1e3a8a', t:'#ffffff'},
+  {k:'r', n:'MERAH',  c:'#ef4444', d:'#7f1d1d', t:'#ffffff'},
+  {k:'g', n:'HIJAU',  c:'#22c55e', d:'#14532d', t:'#05260f'},
+  {k:'y', n:'KUNING', c:'#facc15', d:'#854d0e', t:'#3b2a00'}
+];
+// a = indeks jawaban benar (0=A ... 3=D) sesuai kunci pada SOAL
+const Q = [
+ {"q": "Zat kimia yang dihasilkan oleh kelenjar endokrin dan dibawa oleh darah menuju organ target disebut ….", "o": ["impuls saraf", "antibodi", "hormon", "enzim pencernaan"], "a": 2},
+ {"q": "Perbedaan yang tepat antara sistem saraf dan sistem hormon adalah ….", "o": ["sistem saraf bekerja melalui darah, sistem hormon bekerja melalui sel saraf", "sistem saraf bekerja cepat dengan impuls saraf, sistem hormon bekerja lebih lambat melalui hormon dalam darah", "sistem saraf dan sistem hormon bekerja sama cepat dan pengaruhnya sama lama", "sistem hormon bekerja lebih cepat daripada sistem saraf"], "a": 1},
+ {"q": "Kelenjar endokrin yang terletak di bagian bawah otak dan menghasilkan hormon pertumbuhan adalah ….", "o": ["hipofisis (pituitari)", "pineal", "timus", "adrenal"], "a": 0},
+ {"q": "Kelenjar pineal menghasilkan melatonin yang berperan dalam ….", "o": ["mengatur kadar kalsium dalam darah", "mengatur metabolisme tubuh", "mengatur siklus tidur dan bangun", "membantu perkembangan sistem kekebalan tubuh"], "a": 2},
+ {"q": "Kelenjar timus terletak di rongga dada, di belakang tulang dada. Hormon timosin yang dihasilkannya membantu ….", "o": ["pengaturan kadar gula darah", "perkembangan sistem kekebalan tubuh", "pengaturan siklus tidur dan bangun", "perkembangan ciri kelamin sekunder"], "a": 1},
+ {"q": "Pasangan kelenjar, hormon, dan fungsi yang tepat adalah ….", "o": ["tiroid – parathormon – mengatur kadar kalsium dalam darah", "paratiroid – tiroksin – mengatur metabolisme tubuh", "adrenal – melatonin – mengatur siklus tidur dan bangun", "pankreas – insulin dan glukagon – menjaga keseimbangan kadar gula darah"], "a": 3},
+ {"q": "Kelenjar yang terletak di bagian belakang kelenjar tiroid dan berfungsi mengatur kadar kalsium dalam darah adalah ….", "o": ["paratiroid yang menghasilkan parathormon (PTH)", "tiroid yang menghasilkan tiroksin", "timus yang menghasilkan timosin", "adrenal yang menghasilkan adrenalin"], "a": 0},
+ {"q": "Perhatikan fungsi hormon berikut.\n(1) Mengatur perkembangan ciri kelamin sekunder perempuan dan berperan dalam siklus menstruasi.\n(2) Membantu mengatur siklus menstruasi serta mempersiapkan kondisi rahim.\n(3) Mengatur perkembangan ciri kelamin sekunder laki-laki dan fungsi reproduksi.\nHormon yang sesuai dengan fungsi (1), (2), dan (3) secara berurutan adalah ….", "o": ["progesteron, estrogen, testosteron", "estrogen, progesteron, testosteron", "estrogen, testosteron, progesteron", "testosteron, estrogen, progesteron"], "a": 1},
+ {"q": "Setelah makan nasi dan minum teh manis, kadar gula darah Rani meningkat. Beberapa jam kemudian Rani belum makan lagi dan kadar gula darahnya menurun. Analisis yang paling tepat tentang kerja hormon pankreas pada kedua keadaan tersebut adalah ….", "o": ["saat kadar gula darah naik pankreas menghasilkan glukagon, saat turun menghasilkan insulin", "pada kedua keadaan pankreas hanya menghasilkan insulin", "saat kadar gula darah naik kelenjar adrenal menghasilkan adrenalin, saat turun pineal menghasilkan melatonin", "saat kadar gula darah naik pankreas menghasilkan insulin untuk menurunkannya, saat turun pankreas menghasilkan glukagon untuk meningkatkannya"], "a": 3},
+ {"q": "Dika hampir tertabrak sepeda motor. Setelah itu jantungnya berdebar, napasnya cepat, dan tubuhnya terasa siaga. Analisis yang paling tepat tentang peristiwa tersebut adalah ….", "o": ["hanya sistem saraf yang bekerja, tidak ada peran hormon", "adrenalin dihasilkan tanpa ada rangsangan dari lingkungan", "mata menerima rangsangan, sistem saraf mengolah informasi, kelenjar adrenal menghasilkan adrenalin yang dibawa darah ke jantung sehingga detak jantung meningkat", "kelenjar paratiroid menghasilkan parathormon yang membuat jantung berdetak lebih cepat"], "a": 2}
+];
+
+/* ---------- util ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const robotSVG = () => `<svg viewBox="0 0 80 90"><line x1="40" y1="8" x2="40" y2="17" stroke="var(--d)" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="7" r="5.5" fill="#fde68a" stroke="#f59e0b" stroke-width="1.5"/>
+<rect x="8" y="27" width="8" height="14" rx="4" fill="var(--d)"/><rect x="64" y="27" width="8" height="14" rx="4" fill="var(--d)"/>
+<rect x="13" y="16" width="54" height="36" rx="16" fill="var(--c)" stroke="var(--d)" stroke-width="3"/>
+<rect x="20" y="23" width="40" height="23" rx="11" fill="#0b1530"/>
+<circle cx="31" cy="34" r="5.5" fill="#7ff0ff"/><circle cx="49" cy="34" r="5.5" fill="#7ff0ff"/><circle cx="33" cy="32" r="1.8" fill="#fff"/><circle cx="51" cy="32" r="1.8" fill="#fff"/>
+<path d="M35 40 q5 4.5 10 0" stroke="#7ff0ff" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<circle cx="24" cy="42" r="2.6" fill="#f9a8d4" opacity=".8"/><circle cx="56" cy="42" r="2.6" fill="#f9a8d4" opacity=".8"/>
+<rect x="9" y="56" width="10" height="19" rx="5" fill="var(--d)"/><rect x="61" y="56" width="10" height="19" rx="5" fill="var(--d)"/>
+<rect x="20" y="54" width="40" height="24" rx="11" fill="var(--c)" stroke="var(--d)" stroke-width="3"/>
+<circle cx="40" cy="66" r="5.5" fill="#fff" opacity=".9"/><circle cx="40" cy="66" r="2.6" fill="var(--d)"/>
+<circle cx="30" cy="82" r="7" fill="#1e293b" stroke="#94a3b8" stroke-width="2.5"/><circle cx="50" cy="82" r="7" fill="#1e293b" stroke="#94a3b8" stroke-width="2.5"/></svg>`;
+const style = t => `--c:${t.c};--d:${t.d};--t:${t.t}`;
+
+/* ---------- sound ---------- */
+let sndOn = true, ac;
+function tone(f,d,type='sine',delay=0,vol=.15){
+  if(!sndOn) return;
+  try{
+    ac = ac || new (window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(), g=ac.createGain(), t0=ac.currentTime+delay;
+    o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+d);
+    o.connect(g);g.connect(ac.destination);o.start(t0);o.stop(t0+d);
+  }catch(e){}
+}
+const sOK=()=>{tone(660,.14,'triangle');tone(880,.22,'triangle',.12)};
+const sNO=()=>{tone(200,.3,'sawtooth',0,.1);tone(150,.3,'sawtooth',.12,.1)};
+const sWIN=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.25,'triangle',i*.14));
+
+/* ---------- build ---------- */
+const lanesEl = $('#lanes'), qrowEl = $('#qrow');
+TEAMS.forEach(t=>{
+  t.el = document.createElement('section');
+  t.el.className = 'lane'; t.el.style.cssText = style(t);
+  t.el.innerHTML = `
+     <div class="tag"><b class="orb">TIM<br>${t.n}</b><div class="cnt"><span class="p">0/${TOTAL}</span><i class="s"></i></div></div>
+     <div class="track"><div class="start">START</div>
+       ${Array.from({length:TOTAL},(_,i)=> i===TOTAL-1 ? '<div class="tile fin">FINISH</div>' : `<div class="tile">${i+1}</div>`).join('')}
+       <div class="robot">${robotSVG()}</div>
+     </div>`;
+  lanesEl.appendChild(t.el);
+  t.box = document.createElement('section');
+  t.box.className = 'qbox'; t.box.style.cssText = style(t);
+  t.box.innerHTML = `<div class="qh orb"><span class="ht">TIM ${t.n}</span><span class="hr"></span></div><div class="q"></div><div class="opts"></div>`;
+  qrowEl.appendChild(t.box);
+  t.robot=$('.robot',t.el); t.tiles=[...t.el.querySelectorAll('.tile')];
+});
+$('#parade').innerHTML = TEAMS.map(t=>`<div class="robot" style="${style(t)}">${robotSVG()}</div>`).join('');
+
+let gid = 0, over = false;
+
+function setRobot(t){
+  t.robot.style.left = t.pos===0 ? '48px' : `calc(96px + (100% - 96px) * ${(t.pos-.5)/TOTAL})`;
+  t.tiles.forEach((el,i)=>el.classList.toggle('on', i < t.pos));
+  $('.p',t.el).textContent = `${t.pos}/${TOTAL}`;
+  $('.s',t.el).textContent = `✔ ${t.ok}  ✖ ${t.bad}`;
+}
+
+function showQ(t){
+  if(over) return;
+  if(!t.queue.length){
+    t.done=true; t.box.className='qbox done';
+    $('.ht',t.box).textContent='TIM '+t.n; $('.hr',t.box).innerHTML=''; $('.opts',t.box).innerHTML='';
+    t.box.style.setProperty('--fq','28px');
+    $('.q',t.box).textContent=`🚫 Semua soal selesai. ${t.lost} soal hangus, sehingga robot tidak dapat mencapai FINISH.`;
+    checkEnd(); return;
+  }
+  t.cur = t.queue.shift();
+  const q = Q[t.cur];
+  t.order = shuffle([0,1,2,3]);
+  t.locked = false;
+  t.box.className = 'qbox';
+  const L = q.q.length + q.o.reduce((n,x)=>n+x.length,0);
+  t.box.style.setProperty('--fq', L<180?'31px':L<300?'27px':L<400?'24px':L<500?'22px':'21px');
+  t.box.style.setProperty('--fo', L<180?'26px':L<300?'23px':L<400?'20.5px':L<500?'19px':'18px');
+  const qh=$('.qh',t.box); qh.className='qh orb'; $('.ht',qh).textContent='TIM '+t.n; setHearts(t,3-(t.fail[t.cur]||0));
+  $('.q',t.box).textContent = q.q;
+  const wrap = $('.opts',t.box); wrap.innerHTML='';
+  t.order.forEach((oi,pos)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.innerHTML=`<span class="l">${'ABCD'[pos]}</span><span>${q.o[oi]}</span>`;
+    b.addEventListener('click',()=>answer(t,pos,b));
+    wrap.appendChild(b);
+  });
+  fitText(t);
+}
+
+function setHearts(t,n){ $('.hr',t.box).innerHTML=[0,1,2].map(i=>`<i class="${i<n?'':'x'}">♥</i>`).join(''); }
+function markLost(t){ for(let i=0;i<t.lost;i++){ const el=t.tiles[TOTAL-1-i]; el.classList.add('blk'); el.textContent='✖'; } }
+function checkEnd(){
+  if(over || !TEAMS.every(x=>x.done)) return;
+  over=true; const my=gid; setTimeout(()=>{ if(my===gid) noWinner(); },1200);
+}
+// Perkecil huruf bertahap sampai soal + semua pilihan muat di kotak
+function fitText(t){
+  const tiers=[[32,27],[29,25],[27,23],[25,21],[23,20],[21,18.5],[19.5,17.5],[18,16.5],[17,15.5]];
+  const wrap=$('.opts',t.box);
+  for(const [fq,fo] of tiers){
+    t.box.style.setProperty('--fq',fq+'px'); t.box.style.setProperty('--fo',fo+'px');
+    const over=[...wrap.children].some(o=>o.scrollHeight>o.clientHeight+1) || wrap.scrollHeight>wrap.clientHeight+1;
+    if(!over) break;
+  }
+}
+function bubble(t,ok,txt){
+  const b=document.createElement('div');
+  b.className='bub '+(ok?'ok':'no'); b.textContent = txt;
+  t.robot.appendChild(b); setTimeout(()=>b.remove(),1250);
+}
+
+function answer(t,pos,btn){
+  if(over||t.locked) return;
+  t.locked = true;
+  const my = gid, ok = t.order[pos] === Q[t.cur].a;
+  t.box.classList.add('lock', ok?'ok':'no');
+  btn.classList.add(ok?'right':'wrong');
+  const qh=$('.qh',t.box); qh.className='qh orb '+(ok?'ok':'no'); $('.ht',qh).textContent=ok?'✔ BENAR!':'✖ SALAH';
+  if(ok){ bubble(t,true,'✔ BENAR! +1');
+    t.ok++; t.pos++; sOK();
+    t.robot.classList.remove('go'); void t.robot.offsetWidth; t.robot.classList.add('go');
+    setRobot(t);
+    if(t.pos>=TOTAL){ over=true; setTimeout(()=>{ if(my===gid) win(t); },1300); return; }
+  }else{
+    t.bad++; sNO();
+    const f = t.fail[t.cur] = (t.fail[t.cur]||0) + 1;
+    setHearts(t,3-f);
+    if(f>=3){
+      // salah 3x: soal hangus, robot tidak mungkin mencapai FINISH
+      t.lost++; markLost(t); bubble(t,false,'✖ SOAL HANGUS');
+      $('.ht',qh).textContent='✖ HANGUS';
+    }else{
+      // salah 1-2x: soal dimasukkan lagi ke antrean di posisi acak (tidak langsung berikutnya)
+      bubble(t,false,'✖ SALAH');
+      const L=t.queue.length, i = L ? 1+Math.floor(Math.random()*L) : 0;
+      t.queue.splice(i,0,t.cur);
+    }
+    setRobot(t);
+  }
+  setTimeout(()=>{ if(my===gid) showQ(t); }, ok?1400:1500);
+}
+
+function startGame(){
+  gid++; over=false;
+  $('#ovStart').classList.remove('show'); $('#ovWin').classList.remove('show');
+  document.querySelectorAll('.cf').forEach(e=>e.remove());
+  TEAMS.forEach(t=>{
+    t.pos=0; t.ok=0; t.bad=0; t.locked=false; t.fail={}; t.lost=0; t.done=false;
+    t.tiles.forEach((el,i)=>{ el.classList.remove('blk','on'); el.textContent = i===TOTAL-1 ? 'FINISH' : i+1; });
+    t.queue = shuffle(Q.map((_,i)=>i));   // 15 soal sama, urutan diacak per tim
+    t.robot.classList.remove('go','win'); t.robot.querySelectorAll('.bub').forEach(e=>e.remove());
+    setRobot(t); showQ(t);
+  });
+}
+
+function win(t){
+  sWIN();
+  t.robot.classList.add('win');
+  $('#wRobot').innerHTML = `<div class="robot win" style="${style(t)}">${robotSVG()}</div>`;
+  $('#wTop').textContent='🏆 PEMENANG 🏆'; $('#wTitle').style.fontSize='';
+  const ti=$('#wTitle'); ti.textContent = `TIM ${t.n}`; ti.style.color = t.c; ti.style.webkitTextStroke = `3px ${t.d}`; ti.style.textShadow = '0 4px 0 rgba(0,0,0,.18)';
+  const rank = TEAMS.slice().sort((a,b)=>(b===t)-(a===t) || b.pos-a.pos);
+  $('#wRank').innerHTML = rank.map((x,i)=>`<span style="color:${x.c}">●</span> ${i+1}. Tim ${x.n} — langkah ${x.pos}/${TOTAL} (benar ${x.ok}, salah ${x.bad}${x.lost?', hangus '+x.lost:''})`).join('<br>');
+  $('#ovWin').classList.add('show');
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div'); c.className='cf';
+    c.style.left=Math.random()*1900+'px'; c.style.background=TEAMS[i%4].c;
+    c.style.animationDuration=(2.4+Math.random()*2.4)+'s'; c.style.animationDelay=(Math.random()*1.2)+'s';
+    $('#stage').appendChild(c);
+  }
+}
+
+function noWinner(){
+  tone(220,.5,'triangle');
+  $('#wTop').textContent='GAME SELESAI'; $('#wRobot').innerHTML='<div style="font-size:120px">🤖💤</div>';
+  const ti=$('#wTitle'); ti.textContent='TIDAK ADA PEMENANG'; ti.style.fontSize='72px'; ti.style.color='#dc2626'; ti.style.webkitTextStroke='0'; ti.style.textShadow='none';
+  $('#wRank').innerHTML=TEAMS.slice().sort((a,b)=>b.pos-a.pos).map((x,i)=>`<span style="color:${x.c}">●</span> ${i+1}. Tim ${x.n} — langkah ${x.pos}/${TOTAL} (benar ${x.ok}, salah ${x.bad}, hangus ${x.lost})`).join('<br>');
+  $('#ovWin').classList.add('show');
+}
+
+/* ---------- controls ---------- */
+$('#bGo').onclick = startGame;
+$('#bAgain').onclick = startGame;
+$('#bMenu').onclick = ()=>{ gid++; over=true; $('#ovWin').classList.remove('show'); $('#ovStart').classList.add('show'); document.querySelectorAll('.cf').forEach(e=>e.remove()); };
+$('#bSnd').onclick = e=>{ sndOn=!sndOn; e.target.textContent = sndOn?'🔊':'🔇'; };
+$('#bFs').onclick = ()=>{ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{}); };
+let rst=0;
+$('#bReset').onclick = e=>{
+  if(!rst){ e.target.textContent='Yakin? Ketuk lagi'; rst=setTimeout(()=>{rst=0;e.target.textContent='↻ Ulang';},2500); return; }
+  clearTimeout(rst); rst=0; e.target.textContent='↻ Ulang'; startGame();
+};
+
+/* ---------- skala 16:9 ---------- */
+function fit(){ const s=Math.min(innerWidth/1920, innerHeight/1080); $('#stage').style.transform=`translate(-50%,-50%) scale(${s})`; }
+addEventListener('resize',fit); fit();
+TEAMS.forEach(t=>{ t.pos=0; t.ok=0; t.bad=0; t.lost=0; t.fail={}; setRobot(t); });
+</script>
+</body>
+</html>
